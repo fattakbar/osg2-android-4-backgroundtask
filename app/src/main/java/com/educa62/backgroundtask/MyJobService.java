@@ -10,7 +10,7 @@ public class MyJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         // lakukan background task atau memanggil service
-        MyIntentService.startActionFoo(this, "hello", "world");
+        MyIntentService.startActionJobService(this, "hello", "world");
         return true;
     }
 

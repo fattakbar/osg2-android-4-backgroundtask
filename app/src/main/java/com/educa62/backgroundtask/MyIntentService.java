@@ -1,25 +1,22 @@
 package com.educa62.backgroundtask;
 
 import android.app.IntentService;
-import android.content.Intent;
 import android.content.Context;
+import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  * <p>
- * TODO: Customize class - update intent actions, extra parameters and static
  * helper methods.
  */
 public class MyIntentService extends IntentService {
-    // TODO: Rename actions, choose action names that describe tasks that this
-    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
-    private static final String ACTION_FOO = "com.educa62.backgroundtask.action.FOO";
-    private static final String ACTION_BAZ = "com.educa62.backgroundtask.action.BAZ";
+    private static final String ACTION_FROM_ACTIVITY = "com.educa62.backgroundtask.action.ACT";
+    private static final String ACTION_FROM_JOB_SERVICE = "com.educa62.backgroundtask.action.JS";
 
-    // TODO: Rename parameters
-    private static final String EXTRA_PARAM1 = "com.educa62.backgroundtask.extra.PARAM1";
-    private static final String EXTRA_PARAM2 = "com.educa62.backgroundtask.extra.PARAM2";
+    private static final String EXTRA_WORD1 = "com.educa62.backgroundtask.extra.WORD1";
+    private static final String EXTRA_WORD2 = "com.educa62.backgroundtask.extra.WORD2";
 
     public MyIntentService() {
         super("MyIntentService");
@@ -31,12 +28,11 @@ public class MyIntentService extends IntentService {
      *
      * @see IntentService
      */
-    // TODO: Customize helper method
-    public static void startActionFoo(Context context, String param1, String param2) {
+    public static void startActionFromActivity(Context context, String param1, String param2) {
         Intent intent = new Intent(context, MyIntentService.class);
-        intent.setAction(ACTION_FOO);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
+        intent.setAction(ACTION_FROM_ACTIVITY);
+        intent.putExtra(EXTRA_WORD1, param1);
+        intent.putExtra(EXTRA_WORD2, param2);
         context.startService(intent);
     }
 
@@ -47,11 +43,11 @@ public class MyIntentService extends IntentService {
      * @see IntentService
      */
     // TODO: Customize helper method
-    public static void startActionBaz(Context context, String param1, String param2) {
+    public static void startActionJobService(Context context, String param1, String param2) {
         Intent intent = new Intent(context, MyIntentService.class);
-        intent.setAction(ACTION_BAZ);
-        intent.putExtra(EXTRA_PARAM1, param1);
-        intent.putExtra(EXTRA_PARAM2, param2);
+        intent.setAction(ACTION_FROM_JOB_SERVICE);
+        intent.putExtra(EXTRA_WORD1, param1);
+        intent.putExtra(EXTRA_WORD2, param2);
         context.startService(intent);
     }
 
@@ -59,33 +55,43 @@ public class MyIntentService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         if (intent != null) {
             final String action = intent.getAction();
-            if (ACTION_FOO.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionFoo(param1, param2);
-            } else if (ACTION_BAZ.equals(action)) {
-                final String param1 = intent.getStringExtra(EXTRA_PARAM1);
-                final String param2 = intent.getStringExtra(EXTRA_PARAM2);
-                handleActionBaz(param1, param2);
+            if (ACTION_FROM_ACTIVITY.equals(action)) {
+                final String param1 = intent.getStringExtra(EXTRA_WORD1);
+                final String param2 = intent.getStringExtra(EXTRA_WORD2);
+                handleActionFromActivity(param1, param2);
+            } else if (ACTION_FROM_JOB_SERVICE.equals(action)) {
+                final String param1 = intent.getStringExtra(EXTRA_WORD1);
+                final String param2 = intent.getStringExtra(EXTRA_WORD2);
+                handleActionFromJobService(param1, param2);
             }
         }
     }
 
     /**
-     * Handle action Foo in the provided background thread with the provided
+     * Handle action FromActivity in the provided background thread with the provided
      * parameters.
      */
-    private void handleActionFoo(String param1, String param2) {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
+    private void handleActionFromActivity(final String param1, final String param2) {
+        // Dikarenakan IntentService ini berjalan di worker thread, untuk memunculkan Toast atau mengubah UI,
+        // harus dijalankan di main thread.
+        sendBroadcastMessage(String.format("%s %s, from handleActionFromActivity", param1, param2));
     }
 
     /**
-     * Handle action Baz in the provided background thread with the provided
+     * Handle action JobService in the provided background thread with the provided
      * parameters.
      */
-    private void handleActionBaz(String param1, String param2) {
-        // TODO: Handle action Baz
-        throw new UnsupportedOperationException("Not yet implemented");
+    private void handleActionFromJobService(String param1, String param2) {
+        // Dikarenakan IntentService ini berjalan di worker thread, untuk memunculkan Toast atau mengubah UI,
+        // harus dijalankan di main thread.
+        sendBroadcastMessage(String.format("%s %s, from handleActionFromJobService", param1, param2));
+    }
+
+    private void sendBroadcastMessage(String message) {
+        // Kirim message ke main thread menggunakan LocalBroadcastManager.
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        Intent localIntent = new Intent(MainActivity.BROADCAST_ACTION);
+        localIntent.putExtra("message", message);
+        localBroadcastManager.sendBroadcast(localIntent);
     }
 }
